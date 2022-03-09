@@ -17,6 +17,16 @@ exports.createusers = async (req, res, next) => {
     });
   }
 };
+exports.deleteuser = async (req, res, next) => {
+  try {
+    const data = await userModel.deleteMany({});
+    res.send(data);
+  } catch (err) {
+    res.json({
+      err: err.message,
+    });
+  }
+};
 
 exports.loginuser = async (req, res, next) => {
   try {

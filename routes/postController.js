@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const post = require("../controllers/post");
-const likedpost = require("../controllers/liked");
+const nft = require("../controllers/post");
+const likedNft = require("../controllers/liked");
 
-router.post("/post", post.createpost);
-router.post("/post/like/:id", likedpost.likeController);
+router.post("/create", nft.createNft);
+router.delete("/delete", nft.deletenft);
+router.post("/like/:id", likedNft.likeController);
+router.get("/like/ascending", nft.findLikeAscending);
+router.get("/like/descending", nft.findLikeDescending);
 
 module.exports = router;

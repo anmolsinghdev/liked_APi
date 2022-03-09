@@ -1,12 +1,13 @@
 const Mongoose = require("mongoose");
 
 const likedSchema = Mongoose.Schema({
-  postid: {
+  nftid: {
     type: String,
   },
   userid: {
-    type: Array,
+    type: String,
   },
 });
+
 const likedModel = Mongoose.model("likes", likedSchema);
 module.exports = likedModel;

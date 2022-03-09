@@ -4,8 +4,11 @@ const postSchema = Mongoose.Schema({
   email: {
     type: String,
   },
-  post: {
+  nft: {
     type: String,
+  },
+  likes: {
+    type: Array,
   },
 });
 const postModel = Mongoose.model("posts", postSchema);

@@ -9,10 +9,10 @@ const port = 3000;
 
 const userRoute = require("./routes/usercontroller");
 // const likeRoute = require("./routes/likedController");
-const postRoute = require("./routes/postController");
+const nftRoute = require("./routes/postController");
 
 app.use("/user", userRoute);
 // app.use(likeRoute);
-app.use(postRoute);
+app.use("/nft", nftRoute);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

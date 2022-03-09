@@ -1,6 +1,8 @@
 // const likeModel = require("../../models/likecollection");
 const likeModel = require("../models/liked");
+const NFT = require("../models/Posts");
 const jwt = require("jsonwebtoken");
+const res = require("express/lib/response");
 
 exports.likeController = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -11,81 +13,75 @@ exports.likeController = async (req, res, next) => {
     email,
   };
   req.user = user;
-  const postid = req.params.id;
+  const urlNFTId = req.params.id;
   const userid = req.user.id;
-  let postexist;
-  // check if post already exists
-  try {
-    postexist = await likeModel.exists({
-      postid: postid,
+
+  const fetchNFT = await likeModel.findOne({
+    nftid: urlNFTId,
+    userid: userid,
+  });
+
+  if (fetchNFT === null) {
+    await likeModel.create({
+      nftid: urlNFTId,
+      userid: userid,
     });
-  } catch (err) {
-    return next(err);
-  }
-  // create like model if it doesn t exist
-  if (!postexist) {
-    try {
-      const likes = await likeModel.create({
-        postid: postid,
-        userid: userid,
+    const findNFT = await NFT.findByIdAndUpdate(
+      { _id: urlNFTId },
+      { $set: { likes: await countLike(urlNFTId) } },
+      { new: true }
+    );
+    console.log("findNFT", findNFT);
+    res.json({
+      success: true,
+      status: 201,
+      message: " message.SUCCESSFULLY_SAVED",
+      // data: await countLike(urlNFTId),
+      NFT: findNFT,
+    });
+  } else if (
+    fetchNFT.userid.includes(userid) &&
+    fetchNFT.nftid.includes(urlNFTId)
+  ) {
+    const query = {
+      userid: userid,
+      nftid: urlNFTId,
+    };
+    const result = await likeModel.deleteOne(query);
+    const findNFT = await NFT.findByIdAndUpdate(
+      { _id: urlNFTId },
+      { $set: { likes: await countLike(urlNFTId) } },
+      { new: true }
+    );
+    if (result.deletedCount === 1) {
+      res.json({
+        success: true,
+        status: 201,
+        message: "message.UPDATED_SUCCESSFULLY",
+        NFT: findNFT,
       });
-      res.json({ likes });
-    } catch (err) {
-      return next(err);
     }
   } else {
-    let findpost;
-    // try to find post in like model
-    try {
-      findpost = await likeModel.findOne({ postid: postid });
-    } catch (err) {
-      next(err);
-    }
-
-    /*
-      find the like user with email
-      Args:
-       - email
-      
-      */
-    const finduser = findpost.userid.find((email) => {
-      return email === userid;
+    await likeModel.create({
+      nftid: urlNFTId,
+      userid: userid,
     });
-
-    if (!finduser) {
-      // find and update like
-      try {
-        const like = await likeModel.findOneAndUpdate(
-          { postid: postid },
-          {
-            $push: {
-              userid: userid,
-            },
-          },
-          { new: true }
-        );
-
-        res.json({ like, likecount: like.userid.length });
-      } catch (err) {
-        return next(err);
-      }
-    } else {
-      // remove the user from the like model
-      try {
-        const unlike = await likeModel.findOneAndUpdate(
-          { postid: postid },
-          {
-            $pull: {
-              userid: userid,
-            },
-          },
-          { new: true }
-        );
-
-        res.json({ unlike, likecount: unlike.userid.length });
-      } catch (err) {
-        return next(err);
-      }
-    }
+    const findNFT = await NFT.findById(urlNFTId);
+    res.json({
+      success: true,
+      status: 201,
+      message: "message.SUCCESSFULLY_SAVED",
+      data: await countLike(urlNFTId),
+      NFT: findNFT,
+    });
   }
 };
+async function countLike(urlNFTId) {
+  let like = await likeModel.aggregate([
+    { $match: { nftid: urlNFTId } },
+    {
+      $count: "Likes",
+    },
+  ]);
+  return like;
+}
